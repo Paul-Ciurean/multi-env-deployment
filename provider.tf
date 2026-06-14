@@ -7,13 +7,6 @@ terraform {
       version = ">= 5.0"
     }
   }
-
-  backend "s3" {
-    bucket       = "pic-sharing-app-tf-state"
-    key          = "terraform/pic-sharing-app/terraform.tfstate"
-    region       = "eu-west-2"
-    use_lockfile = true
-  }
 }
 
 provider "aws" {
