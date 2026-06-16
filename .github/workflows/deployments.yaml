@@ -30,7 +30,7 @@ jobs:
         run: terraform init -reconfigure -upgrade -backend-config="bucket=pc-terraform-backend-bucket" -backend-config="key=environments/dev/terraform.tfstate" -backend-config="region=us-east-1" -backend-config="use_lockfile=true" -backend-config="encrypt=true"
 
       - name: Terraform Plan
-        run: terraform plan -var-file "environments/dev/terraform.tfvars" -var "env=dev" -var "region=us-east-1" -out=tfplan
+        run: terraform plan -var-file "environments/dev/variables.tfvars" -var "env=dev" -var "region=us-east-1" -out=tfplan
 
       # - name: Upload plan artifact
       #   uses: actions/upload-artifact@v4
