@@ -43,40 +43,43 @@ jobs:
     name: Manual Approval
     needs: terraform-plan
     runs-on: ubuntu-latest
-    environment: production
+    environment: dev
 
     steps:
-      - run: echo "Approved for production deploy"
+      - run: echo "Approved for development deploy"
 
 
-  # terraform-apply:
-  #   name: Terraform Apply
-  #   needs: approval
-  #   runs-on: ubuntu-latest
+  terraform-apply:
+    name: Terraform Apply
+    needs: approval
+    runs-on: ubuntu-latest
 
-  #   steps:
-  #     - name: Checkout code
-  #       uses: actions/checkout@v4
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-  #     - name: Setup Terraform
-  #       uses: hashicorp/setup-terraform@v3
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
 
-  #     - name: Configure AWS credentials
-  #       uses: aws-actions/configure-aws-credentials@v4
-  #       with:
-  #         role-to-assume: ${{ secrets.AWS_ROLE_ARN_PROD }}
-  #         aws-region: ${{ var.AWS_REGION }}
+      - name: job well done
+        run: echo "Terraform Apply job completed successfully"
 
-  #     - name: Terraform Init
-  #       working-directory: terraform
-  #       run: terraform init
+      # - name: Configure AWS credentials
+      #   uses: aws-actions/configure-aws-credentials@v4
+      #   with:
+      #     role-to-assume: ${{ secrets.AWS_ROLE_ARN_DEV }}
+      #     aws-region: ${{ vars.AWS_REGION }}
 
-  #     - name: Download plan artifact
-  #       uses: actions/download-artifact@v4
-  #       with:
-  #         name: tfplan
-  #         path: terraform
+      # - name: Terraform Init
+      #   working-directory: terraform
+      #   run: terraform init
 
-  #     - name: Terraform Apply
-  #       working-directory: terraform
-  #       run: terraform apply -auto-approve tfplan
+      # - name: Download plan artifact
+      #   uses: actions/download-artifact@v4
+      #   with:
+      #     name: tfplan
+      #     path: terraform
+
+      # - name: Terraform Apply
+      #   working-directory: terraform
+      #   run: terraform apply -auto-approve tfplan
