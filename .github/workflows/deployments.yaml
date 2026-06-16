@@ -39,21 +39,20 @@ jobs:
           path: terraform/tfplan
 
 
-  # approval:
-  #   name: Manual Approval
-  #   needs: terraform-plan
-  #   runs-on: ubuntu-latest
-  #   environment: dev
+  approval:
+    name: Manual Approval
+    needs: terraform-plan
+    runs-on: ubuntu-latest
+    environment: dev
 
-  #   steps:
-  #     - run: echo "Approved for development deploy"
+    steps:
+      - run: echo "Approved for development deploy"
 
 
   terraform-apply:
     name: Terraform Apply
-    needs: terraform-plan
+    needs: approval
     runs-on: ubuntu-latest
-    environment: dev
 
     steps:
       - name: Checkout code
@@ -62,25 +61,21 @@ jobs:
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
 
-      - name: job well done
-        run: echo "Terraform Apply job completed successfully"
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN_DEV }}
+          aws-region: ${{ vars.AWS_REGION }}
 
-      # - name: Configure AWS credentials
-      #   uses: aws-actions/configure-aws-credentials@v4
-      #   with:
-      #     role-to-assume: ${{ secrets.AWS_ROLE_ARN_DEV }}
-      #     aws-region: ${{ vars.AWS_REGION }}
+      - name: Terraform Init
+        run: terraform init
 
-      # - name: Terraform Init
-      #   working-directory: terraform
-      #   run: terraform init
+      - name: Download plan artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: tfplan
+          path: terraform
 
-      # - name: Download plan artifact
-      #   uses: actions/download-artifact@v4
-      #   with:
-      #     name: tfplan
-      #     path: terraform
+      - name: Terraform Apply
 
-      # - name: Terraform Apply
-      #   working-directory: terraform
-      #   run: terraform apply -auto-approve tfplan
+        run: terraform apply -auto-approve tfplan
