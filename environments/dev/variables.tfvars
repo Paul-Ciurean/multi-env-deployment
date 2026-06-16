@@ -1,3 +1,6 @@
 bucket = "this-is-a-test-bucket"
 env = "dev"
 region = "us-east-1"
+instance_type = "t3.micro"
+instance = "test-instance"
+ami = "ami-0521cb2d60cfbb1a6"
