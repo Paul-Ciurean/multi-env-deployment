@@ -1,81 +1,83 @@
 name: Deploy to Dev or Prod
-
 on:
   push:
     branches: [ "main" ]
-
 permissions:
   id-token: write
   contents: read
-
 jobs:
   terraform-plan:
     name: Terraform Plan
     runs-on: ubuntu-latest
-
+    outputs:
+      has_changes: ${{ steps.check_changes.outputs.has_changes }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
-
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
           role-to-assume: ${{ secrets.AWS_ROLE_ARN_DEV }}
           aws-region: ${{ vars.AWS_REGION }}
-
       - name: Terraform Init
         run: terraform init -reconfigure -upgrade -backend-config="bucket=pc-terraform-backend-bucket" -backend-config="key=environments/dev/terraform.tfstate" -backend-config="region=us-east-1" -backend-config="use_lockfile=true" -backend-config="encrypt=true"
-
       - name: Terraform Plan
-        run: terraform plan -var-file "environments/dev/variables.tfvars" -var "env=dev" -var "region=us-east-1" -out=tfplan
-
+        id: plan
+        run: |
+          terraform plan -var-file "environments/dev/variables.tfvars" -var "env=dev" -var "region=us-east-1" -out=tfplan -detailed-exitcode
+        continue-on-error: true
+      - name: Check for infrastructure changes
+        id: check_changes
+        run: |
+          if [ "${{ steps.plan.outputs.exitcode }}" == "2" ]; then
+            echo "has_changes=true" >> $GITHUB_OUTPUT
+            echo "Infrastructure changes detected."
+          else
+            echo "has_changes=false" >> $GITHUB_OUTPUT
+            echo "No infrastructure changes detected. Skipping approval and apply."
+          fi
+      - name: Fail if plan errored
+        if: steps.plan.outputs.exitcode == '1'
+        run: exit 1
       - name: Upload plan artifact
+        if: steps.check_changes.outputs.has_changes == 'true'
         uses: actions/upload-artifact@v4
         with:
           name: tfplan
           path: tfplan
 
-
   approval:
     name: Manual Approval
     needs: terraform-plan
+    if: needs.terraform-plan.outputs.has_changes == 'true'
     runs-on: ubuntu-latest
     environment: dev
-
     steps:
       - run: echo "Approved for development deploy"
 
-
   terraform-apply:
     name: Terraform Apply
-    needs: approval
+    needs: [terraform-plan, approval]
+    if: needs.terraform-plan.outputs.has_changes == 'true'
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
-
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
           role-to-assume: ${{ secrets.AWS_ROLE_ARN_DEV }}
           aws-region: ${{ vars.AWS_REGION }}
-
       - name: Terraform Init
         run: terraform init -reconfigure -upgrade -backend-config="bucket=pc-terraform-backend-bucket" -backend-config="key=environments/dev/terraform.tfstate" -backend-config="region=us-east-1" -backend-config="use_lockfile=true" -backend-config="encrypt=true"
-
       - name: Download plan artifact
         uses: actions/download-artifact@v4
         with:
           name: tfplan
           path: terraform
-
       - name: Terraform Apply
-
         run: terraform apply -auto-approve tfplan
