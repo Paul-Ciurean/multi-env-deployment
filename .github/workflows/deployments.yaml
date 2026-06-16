@@ -39,20 +39,21 @@ jobs:
           path: terraform/tfplan
 
 
-  approval:
-    name: Manual Approval
-    needs: terraform-plan
-    runs-on: ubuntu-latest
-    environment: dev
+  # approval:
+  #   name: Manual Approval
+  #   needs: terraform-plan
+  #   runs-on: ubuntu-latest
+  #   environment: dev
 
-    steps:
-      - run: echo "Approved for development deploy"
+  #   steps:
+  #     - run: echo "Approved for development deploy"
 
 
   terraform-apply:
     name: Terraform Apply
-    needs: approval
+    needs: terraform-plan
     runs-on: ubuntu-latest
+    environment: dev
 
     steps:
       - name: Checkout code
