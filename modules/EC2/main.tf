@@ -3,7 +3,7 @@ resource "aws_instance" "example_1" {
   ami           = var.ami
 
   tags = {
-    Name        = var.instance
+    Name        = "${var.instance}-${var.env}"
     Environment = var.env
   }
 }
