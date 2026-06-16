@@ -1,5 +1,5 @@
 # module "ec2" {
-#   source = "./modules/ec2"
+#   source = "./modules/EC2"
 
 #   env    = var.env
 #   region = var.region
@@ -9,7 +9,7 @@
 # }
 
 module "s3" {
-  source = "./modules/s3"
+  source = "./modules/S3"
 
   env    = var.env
   region = var.region
