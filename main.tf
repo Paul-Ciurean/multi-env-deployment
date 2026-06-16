@@ -12,14 +12,14 @@
 #   }
 # }
 
-# module "s3" {
-#   source = "./modules/S3"
+module "s3" {
+  source = "./modules/S3"
 
-#   bucket = var.bucket
-#   env    = var.env
-#   region = var.region
+  bucket = var.bucket
+  env    = var.env
+  region = var.region
 
-#   providers = {
-#     aws = aws
-#   }
-# }
+  providers = {
+    aws = aws
+  }
+}
