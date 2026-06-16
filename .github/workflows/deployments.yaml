@@ -32,11 +32,11 @@ jobs:
       - name: Terraform Plan
         run: terraform plan -var-file "environments/dev/variables.tfvars" -var "env=dev" -var "region=us-east-1" -out=tfplan
 
-      # - name: Upload plan artifact
-      #   uses: actions/upload-artifact@v4
-      #   with:
-      #     name: tfplan
-      #     path: terraform/tfplan
+      - name: Upload plan artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: tfplan
+          path: terraform/tfplan
 
 
   # approval:
