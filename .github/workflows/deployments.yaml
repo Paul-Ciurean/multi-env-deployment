@@ -20,6 +20,7 @@ jobs:
   dev-terraform-plan:
     name: "[Dev] Terraform Plan"
     runs-on: ubuntu-latest
+    environment: dev
     outputs:
       has_changes: ${{ steps.check_changes.outputs.has_changes }}
     steps:
@@ -84,6 +85,7 @@ jobs:
     needs: [dev-terraform-plan, dev-approval]
     if: needs.dev-terraform-plan.outputs.has_changes == 'true'
     runs-on: ubuntu-latest
+    environment: dev
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
