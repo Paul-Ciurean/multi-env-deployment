@@ -132,6 +132,29 @@ jobs:
             -backend-config="region=${{ vars.TF_REGION }}" \
             -backend-config="use_lockfile=true" \
             -backend-config="encrypt=true"
+
+      - name: Terraform Init
+        run: |
+          terraform init -reconfigure -upgrade \
+            -backend-config="bucket=${{ vars.TF_BACKEND_BUCKET }}" \
+            -backend-config="key=${{ vars.TF_BACKEND_KEY }}" \
+            -backend-config="region=${{ vars.TF_REGION }}" \
+            -backend-config="use_lockfile=true" \
+            -backend-config="encrypt=true"
+
+      - name: Force unlock stale state lock
+        run: |
+          LOCK_ID=$(aws s3api get-object \
+            --bucket ${{ vars.TF_BACKEND_BUCKET }} \
+            --key ${{ vars.TF_BACKEND_KEY }}.tflock \
+            /tmp/lockfile.json 2>/dev/null && jq -r '.ID' /tmp/lockfile.json || echo "")
+          if [ -n "$LOCK_ID" ]; then
+            echo "Stale lock found: $LOCK_ID — force unlocking..."
+            terraform force-unlock -force $LOCK_ID
+          else
+            echo "No stale lock found, continuing."
+          fi
+
       - name: Terraform Plan                               
         id: plan
         run: |
