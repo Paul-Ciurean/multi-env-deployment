@@ -68,7 +68,7 @@ jobs:
           aws-region: ${{ vars.AWS_REGION }}
 
       - name: Terraform Init
-        run: terraform init
+        run: terraform init -reconfigure -upgrade -backend-config="bucket=pc-terraform-backend-bucket" -backend-config="key=environments/dev/terraform.tfstate" -backend-config="region=us-east-1" -backend-config="use_lockfile=true" -backend-config="encrypt=true"
 
       - name: Download plan artifact
         uses: actions/download-artifact@v4
