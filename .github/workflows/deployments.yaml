@@ -39,14 +39,14 @@ jobs:
           path: terraform/tfplan
 
 
-  # approval:
-  #   name: Manual Approval
-  #   needs: terraform-plan
-  #   runs-on: ubuntu-latest
-  #   environment: production
+  approval:
+    name: Manual Approval
+    needs: terraform-plan
+    runs-on: ubuntu-latest
+    environment: production
 
-  #   steps:
-  #     - run: echo "Approved for production deploy"
+    steps:
+      - run: echo "Approved for production deploy"
 
 
   # terraform-apply:
