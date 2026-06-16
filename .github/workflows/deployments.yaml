@@ -41,12 +41,20 @@ jobs:
 
   approval:
     name: Manual Approval
-    needs: terraform-plan
     runs-on: ubuntu-latest
-    environment: dev
+    needs: terraform-plan
+    if: success() # Only proceed if terraform-plan job succeeds
+    
+    permissions:
+      issues: write
 
     steps:
-      - run: echo "Approved for development deploy"
+      - name: Await Manual Approval
+        uses: trstringer/manual-approval@v1
+        with:
+          minimum-approvals: 1
+          issue-title: "Manual Approval Required for Terraform Apply"
+          issue-body: "Please approve or deny the deployment."
 
 
   terraform-apply:
