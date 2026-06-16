@@ -1,1 +1,0 @@
-bucket = "this-is-a-test-bucket"
