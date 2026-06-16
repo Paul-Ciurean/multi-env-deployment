@@ -1,8 +1,8 @@
-name: Deploy to Dev
+name: Deploy to Dev or Prod
 
 on:
   push:
-    branches: ["main"]
+    branches: [ "main" ]
 
 permissions:
   id-token: write
@@ -13,9 +13,6 @@ jobs:
     name: Terraform Plan
     runs-on: ubuntu-latest
 
-    outputs:
-      changes: ${{ steps.set_output.outputs.changes }}
-
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -30,42 +27,10 @@ jobs:
           aws-region: ${{ vars.AWS_REGION }}
 
       - name: Terraform Init
-        run: |
-          terraform init -reconfigure -upgrade \
-            -backend-config="bucket=pc-terraform-backend-bucket" \
-            -backend-config="key=environments/dev/terraform.tfstate" \
-            -backend-config="region=us-east-1" \
-            -backend-config="use_lockfile=true" \
-            -backend-config="encrypt=true"
+        run: terraform init -reconfigure -upgrade -backend-config="bucket=pc-terraform-backend-bucket" -backend-config="key=environments/dev/terraform.tfstate" -backend-config="region=us-east-1" -backend-config="use_lockfile=true" -backend-config="encrypt=true"
 
       - name: Terraform Plan
-        id: plan
-        run: |
-          terraform plan \
-            -detailed-exitcode \
-            -var-file=environments/dev/variables.tfvars \
-            -var="env=dev" \
-            -var="region=us-east-1" \
-            -out=tfplan
-
-          echo "exitcode=$?" >> $GITHUB_OUTPUT
-
-        continue-on-error: true
-
-      - name: Set output safely
-        id: set_output
-        run: |
-          EXITCODE=${{ steps.plan.outputs.exitcode }}
-
-          if [ "$EXITCODE" = "2" ]; then
-            echo "changes=true" >> $GITHUB_OUTPUT
-          else
-            echo "changes=false" >> $GITHUB_OUTPUT
-          fi
-
-      - name: Fail on error
-        if: steps.plan.outputs.exitcode == '1'
-        run: exit 1
+        run: terraform plan -var-file "environments/dev/variables.tfvars" -var "env=dev" -var "region=us-east-1" -out=tfplan
 
       - name: Upload plan artifact
         uses: actions/upload-artifact@v4
@@ -73,14 +38,21 @@ jobs:
           name: tfplan
           path: tfplan
 
+
+  approval:
+    name: Manual Approval
+    needs: terraform-plan
+    runs-on: ubuntu-latest
+    environment: dev
+
+    steps:
+      - run: echo "Approved for development deploy"
+
+
   terraform-apply:
     name: Terraform Apply
+    needs: approval
     runs-on: ubuntu-latest
-    needs: terraform-plan
-
-    if: needs.terraform-plan.outputs.changes == 'true'
-
-    environment: dev
 
     steps:
       - name: Checkout code
@@ -96,18 +68,14 @@ jobs:
           aws-region: ${{ vars.AWS_REGION }}
 
       - name: Terraform Init
-        run: |
-          terraform init -reconfigure -upgrade \
-            -backend-config="bucket=pc-terraform-backend-bucket" \
-            -backend-config="key=environments/dev/terraform.tfstate" \
-            -backend-config="region=us-east-1" \
-            -backend-config="use_lockfile=true" \
-            -backend-config="encrypt=true"
+        run: terraform init -reconfigure -upgrade -backend-config="bucket=pc-terraform-backend-bucket" -backend-config="key=environments/dev/terraform.tfstate" -backend-config="region=us-east-1" -backend-config="use_lockfile=true" -backend-config="encrypt=true"
 
-      - name: Download plan
+      - name: Download plan artifact
         uses: actions/download-artifact@v4
         with:
           name: tfplan
+          path: terraform
 
       - name: Terraform Apply
+
         run: terraform apply -auto-approve tfplan
