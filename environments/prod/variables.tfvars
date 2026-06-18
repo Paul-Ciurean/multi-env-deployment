@@ -1,6 +1,6 @@
 bucket = "this-is-a-test-bucket"
 env = "prod"
 region = "us-east-1"
-instance_type = "t3.micro"
-instance = "test-instance"
+instance_type = "t2.micro"
+instance = "prod-instance"
 ami = "ami-0521cb2d60cfbb1a6"
